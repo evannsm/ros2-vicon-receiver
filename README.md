@@ -1,4 +1,4 @@
-# Vicon receiver for ROS 2
+# Vicon receiver for ROS 2 (Evanns' Fork for PX4 NED frame and visual odometry EKF fusion)
 
 **ros2-vicon-receiver** is a ROS 2 package, written in C++, that retrieves data from Vicon software and publishes it on ROS 2 topics. The code is partly derived from a mixture of [Vicon-ROS2](https://github.com/aheuillet/Vicon-ROS2) and [Vicon bridge](https://github.com/ethz-asl/vicon_bridge).
 
