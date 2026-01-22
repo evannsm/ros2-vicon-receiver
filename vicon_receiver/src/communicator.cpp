@@ -11,8 +11,8 @@ Communicator::Communicator() : Node("vicon_client")
     this->declare_parameter<std::string>("namespace", "vicon");
     this->declare_parameter<std::string>("world_frame", "map");
     this->declare_parameter<std::string>("vicon_frame", "vicon");
-    this->declare_parameter<std::vector<double>>("map_xyz",  {0.0, 0.0, 0.0});
-    this->declare_parameter<std::vector<double>>("map_rpy",  {0.0, 0.0, 0.0});
+    this->declare_parameter<std::vector<double>>("map_xyz", {0.0, 0.0, 0.0});
+    this->declare_parameter<std::vector<double>>("map_rpy", {0.0, 0.0, 0.0});
     this->declare_parameter<bool>("map_rpy_in_degrees", false);
 
     // Retrieve parameters values
@@ -27,8 +27,10 @@ Communicator::Communicator() : Node("vicon_client")
     this->get_parameter("map_rpy_in_degrees", map_rpy_in_degrees);
 
     // Publish static transform from map to vicon origin
-    if (map_rpy_in_degrees) {
-        for (unsigned int i=0; i<map_rpy.size(); i++) {
+    if (map_rpy_in_degrees)
+    {
+        for (unsigned int i = 0; i < map_rpy.size(); i++)
+        {
             map_rpy[i] = map_rpy[i] * M_PI / 180.0;
         }
     }
@@ -53,8 +55,7 @@ void Communicator::publish_static_transform()
     q.setRPY(
         map_rpy[0],
         map_rpy[1],
-        map_rpy[2]
-    );
+        map_rpy[2]);
     static_tf.transform.rotation.x = q.x();
     static_tf.transform.rotation.y = q.y();
     static_tf.transform.rotation.z = q.z();
@@ -65,7 +66,6 @@ void Communicator::publish_static_transform()
     string msg = "Published static transform from " + world_frame + " to " + vicon_frame;
     cout << msg << endl;
 }
-
 
 // Connect to the Vicon server
 bool Communicator::connect()
@@ -86,7 +86,8 @@ bool Communicator::connect()
             cout << msg << endl;
         }
     }
-    if (!rclcpp::ok()) {
+    if (!rclcpp::ok())
+    {
         std::cout << "Shutdown requested before connection established." << std::endl;
         return false;
     }
@@ -188,16 +189,21 @@ void Communicator::get_frame()
             tf_msg.header.frame_id = vicon_frame;
             tf_msg.child_frame_id = subject_name + "_" + segment_name;
 
-            // Vicon translations are in millimeters; convert to meters for ROS
-            tf_msg.transform.translation.x = trans.Translation[0] / 1000.0;
-            tf_msg.transform.translation.y = trans.Translation[1] / 1000.0;
-            tf_msg.transform.translation.z = trans.Translation[2] / 1000.0;
+            // Vicon outputs in ENU (East-North-Up); convert to NED (North-East-Down)
+            // NED: X=North, Y=East, Z=Down
+            // ENU: X=East, Y=North, Z=Up
+            // Conversion: x_ned = y_enu, y_ned = x_enu, z_ned = -z_enu
+            tf_msg.transform.translation.x = trans.Translation[1] / 1000.0;  // North (was Y/North in ENU)
+            tf_msg.transform.translation.y = trans.Translation[0] / 1000.0;  // East (was X/East in ENU)
+            tf_msg.transform.translation.z = -trans.Translation[2] / 1000.0; // Down (was -Z/Up in ENU)
 
-            // Vicon quaternion order is [x, y, z, w]; copy directly
-            tf_msg.transform.rotation.x = quat.Rotation[0];
-            tf_msg.transform.rotation.y = quat.Rotation[1];
-            tf_msg.transform.rotation.z = quat.Rotation[2];
-            tf_msg.transform.rotation.w = quat.Rotation[3];
+            // Quaternion conversion from ENU to NED
+            // Vicon quaternion order is [x, y, z, w]
+            // For NED: swap x and y components, negate z component
+            tf_msg.transform.rotation.x = quat.Rotation[1];  // was y
+            tf_msg.transform.rotation.y = quat.Rotation[0];  // was x
+            tf_msg.transform.rotation.z = -quat.Rotation[2]; // negate z
+            tf_msg.transform.rotation.w = quat.Rotation[3];  // w unchanged
 
             // Publish the position data
             boost::mutex::scoped_try_lock lock(mutex);
@@ -207,7 +213,7 @@ void Communicator::get_frame()
                 pub_it = pub_map.find(subject_name + "/" + segment_name);
                 if (pub_it != pub_map.end())
                 {
-                    Publisher & pub = pub_it->second;
+                    Publisher &pub = pub_it->second;
 
                     if (pub.is_ready)
                     {
@@ -224,7 +230,7 @@ void Communicator::get_frame()
 
                         // Orientation: copy the quaternion (x, y, z, w) directly from the transform.
                         vicon_pose_msg.pose.orientation = tf_msg.transform.rotation;
-                        
+
                         // Update timestamp of static transform
                         static_tf.header.stamp = tf_msg.header.stamp;
 
@@ -256,7 +262,6 @@ void Communicator::get_frame()
 
             // Broadcast the transform
             tf_broadcaster_->sendTransform(tf_msg);
-
         }
     }
 }
@@ -287,7 +292,7 @@ void Communicator::create_publisher_thread(const string subject_name, const stri
 }
 
 // Main function
-int main(int argc, char** argv)
+int main(int argc, char **argv)
 {
     // Initialize the ROS 2 node
     rclcpp::init(argc, argv);
@@ -297,7 +302,8 @@ int main(int argc, char** argv)
     node->connect();
 
     // Continuously retrieve frames while ROS 2 is running
-    while (rclcpp::ok()){
+    while (rclcpp::ok())
+    {
         node->get_frame();
     }
 

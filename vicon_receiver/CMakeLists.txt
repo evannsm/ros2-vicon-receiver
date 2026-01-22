@@ -12,9 +12,18 @@ endif()
 find_package(ament_cmake REQUIRED)
 find_package(rclcpp REQUIRED)
 find_package(geometry_msgs REQUIRED)
+find_package(std_msgs REQUIRED)
 find_package(tf2 REQUIRED)
 find_package(tf2_ros REQUIRED)
 find_package(tf2_geometry_msgs REQUIRED)
+find_package(px4_msgs REQUIRED)
+find_package(rosidl_default_generators REQUIRED)
+
+# Generate custom messages
+rosidl_generate_interfaces(${PROJECT_NAME}
+  "msg/PoseEuler.msg"
+  DEPENDENCIES std_msgs
+)
 
 # detect arch
 if(CMAKE_SYSTEM_PROCESSOR MATCHES "^(aarch64|arm64)$")
@@ -111,13 +120,19 @@ target_link_libraries(vicon_client
   Boost::system Boost::thread Boost::chrono Boost::timer
 )
 
-ament_target_dependencies(vicon_client 
+ament_target_dependencies(vicon_client
   rclcpp
   geometry_msgs
+  std_msgs
   tf2
   tf2_ros
   tf2_geometry_msgs
+  px4_msgs
 )
+
+# Link with generated messages
+rosidl_get_typesupport_target(cpp_typesupport_target ${PROJECT_NAME} rosidl_typesupport_cpp)
+target_link_libraries(vicon_client "${cpp_typesupport_target}")
 
 # Runtime search path so the binary finds libs in the install tree
 set_target_properties(vicon_client PROPERTIES
