@@ -2,11 +2,7 @@
 
 #include <px4_msgs/msg/vehicle_odometry.hpp>
 #include <px4_msgs/msg/vehicle_local_position.hpp>
-// #include <px4_msgs/msg/full_state.hpp>
-// #include <mocap4r2_msgs/msg/full_state.hpp>
-// #include "vicon_receiver/msg/full_state.hpp"
-// #include "vicon_receiver/msg/pose_euler.hpp"
-#include "vicon_receiver/msg/full_state.hpp"
+#include <mocap_msgs/msg/full_state.hpp>
 
 #include <chrono>
 #include <functional>
@@ -38,7 +34,7 @@ public:
             "/fmu/out/vehicle_local_position", px4_qos_sub,
             std::bind(&FullStateRelay::localPositionCallback, this, _1));
 
-        full_state_pub_ = create_publisher<vicon_receiver::msg::FullState>(
+        full_state_pub_ = create_publisher<mocap_msgs::msg::FullState>(
             "/merge_odom_localpos/full_state_relay", px4_qos_pub);
 
         timer_pub_full_state_ = this->create_wall_timer(
@@ -49,7 +45,7 @@ private:
     // --- Subscriptions / publications ---
     rclcpp::Subscription<px4_msgs::msg::VehicleOdometry>::SharedPtr vehicle_odometry_sub_;
     rclcpp::Subscription<px4_msgs::msg::VehicleLocalPosition>::SharedPtr local_position_sub_;
-    rclcpp::Publisher<vicon_receiver::msg::FullState>::SharedPtr full_state_pub_;
+    rclcpp::Publisher<mocap_msgs::msg::FullState>::SharedPtr full_state_pub_;
     rclcpp::TimerBase::SharedPtr timer_pub_full_state_;
 
     // --- Messages ---
@@ -144,7 +140,7 @@ private:
     }
 
     // --- State & gating params ---
-    vicon_receiver::msg::FullState full_state_msg_{};
+    mocap_msgs::msg::FullState full_state_msg_{};
 
     rclcpp::Time last_vo_cb_time_{0, 0, RCL_ROS_TIME};
     rclcpp::Time last_lp_cb_time_{0, 0, RCL_ROS_TIME};

@@ -7,7 +7,7 @@ Publisher::Publisher(std::string topic_name, rclcpp::Node *node)
     position_publisher_ = node->create_publisher<geometry_msgs::msg::PoseStamped>(topic_name, 10);
 
     // Pose Euler publisher with same topic name + "_euler" suffix
-    rpy_publisher_ = node->create_publisher<vicon_receiver::msg::PoseEuler>(topic_name + "_euler", 10);
+    rpy_publisher_ = node->create_publisher<mocap_msgs::msg::PoseEuler>(topic_name + "_euler", 10);
 
     // // PX4 odometry publisher with special QoS for PX4
     // rclcpp::QoS px4_qos(10);
@@ -33,7 +33,7 @@ void Publisher::publish(geometry_msgs::msg::PoseStamped pose_msg)
     double roll, pitch, yaw;
     tf2::Matrix3x3(q).getRPY(roll, pitch, yaw);
 
-    vicon_receiver::msg::PoseEuler euler_msg;
+    mocap_msgs::msg::PoseEuler euler_msg;
     euler_msg.header = pose_msg.header;
     euler_msg.x = pose_msg.pose.position.x;
     euler_msg.y = pose_msg.pose.position.y;

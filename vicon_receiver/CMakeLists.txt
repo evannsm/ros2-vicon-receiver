@@ -17,17 +17,9 @@ find_package(tf2 REQUIRED)
 find_package(tf2_ros REQUIRED)
 find_package(tf2_geometry_msgs REQUIRED)
 find_package(px4_msgs REQUIRED)
-find_package(rosidl_default_generators REQUIRED)
+find_package(mocap_msgs REQUIRED)
 
 find_package(Eigen3 REQUIRED)
-
-
-# Generate custom messages
-rosidl_generate_interfaces(${PROJECT_NAME}
-  "msg/PoseEuler.msg"
-  "msg/FullState.msg"
-  DEPENDENCIES std_msgs
-)
 
 # detect arch
 if(CMAKE_SYSTEM_PROCESSOR MATCHES "^(aarch64|arm64)$")
@@ -145,11 +137,8 @@ ament_target_dependencies(vicon_client
   tf2_ros
   tf2_geometry_msgs
   px4_msgs
+  mocap_msgs
 )
-
-# Link with generated messages
-rosidl_get_typesupport_target(cpp_typesupport_target ${PROJECT_NAME} rosidl_typesupport_cpp)
-target_link_libraries(vicon_client "${cpp_typesupport_target}")
 
 # Runtime search path so the binary finds libs in the install tree
 set_target_properties(vicon_client PROPERTIES
@@ -177,10 +166,8 @@ ament_target_dependencies(full_state_relay
   tf2_ros
   tf2_geometry_msgs
   px4_msgs
+  mocap_msgs
 )
-
-# Link with generated messages
-target_link_libraries(full_state_relay "${cpp_typesupport_target}")
 
 # Runtime search path
 set_target_properties(full_state_relay PROPERTIES
@@ -204,6 +191,7 @@ ament_target_dependencies(visual_odometry_relay
   rclcpp
   geometry_msgs
   px4_msgs
+  mocap_msgs
 )
 
 # Runtime search path

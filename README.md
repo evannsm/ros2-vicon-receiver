@@ -2,91 +2,55 @@
 
 **ros2-vicon-receiver** is a ROS 2 package, written in C++, that retrieves data from Vicon software and publishes it on ROS 2 topics. The code is partly derived from a mixture of [Vicon-ROS2](https://github.com/aheuillet/Vicon-ROS2) and [Vicon bridge](https://github.com/ethz-asl/vicon_bridge).
 
-This is NOT an official ROS 2 package, but it has been successfully tested with ROS 2 Jazzy Jalisco on Ubuntu 24.04 Noble Numbat.
-
----
-
-## Table of Contents
-
-- [Vicon receiver for ROS 2](#vicon-receiver-for-ros-2)
-  - [Table of Contents](#table-of-contents)
-  - [Requirements](#requirements)
-  - [What's new in v1.0.0 (Jazzy)](#whats-new-in-v100-jazzy)
-    - [Migration notes](#migration-notes)
-  - [Compatibility](#compatibility)
-  - [Package layout \& executable](#package-layout--executable)
-  - [Quick start](#quick-start)
-  - [Node interface](#node-interface)
-    - [Launch arguments (convenience wrappers)](#launch-arguments-convenience-wrappers)
-    - [Node parameters (set with `--ros-args -p name:=value`)](#node-parameters-set-with---ros-args--p-namevalue)
-    - [Published topics](#published-topics)
-      - [Naming scheme](#naming-scheme)
-      - [Message types](#message-types)
-      - [Notes](#notes)
-      - [QoS](#qos)
-      - [Example topic tree](#example-topic-tree)
-  - [Frames \& mapping](#frames--mapping)
-    - [TF tree (template + notes)](#tf-tree-template--notes)
-      - [Static transform (`map → vicon`)](#static-transform-map--vicon)
-      - [Dynamic transforms](#dynamic-transforms)
-      - [Tips](#tips)
-  - [Example images](#example-images)
-    - [TF2 frame tree](#tf2-frame-tree)
-    - [RViz: TF and Pose (template)](#rviz-tf-and-pose-template)
-  - [Building \& linking details](#building--linking-details)
-  - [Troubleshooting / FAQ](#troubleshooting--faq)
-  - [License \& attribution](#license--attribution)
-  - [Contributing](#contributing)
+This is NOT an official ROS 2 package, but it has been successfully tested with ROS 2 Jazzy Jalisco on Ubuntu 24.04 Noble Numbat and ROS2 Humble Hawksbill on Ubuntu 22.04 Jammy Jellyfish.
 
 ---
 
 ## Requirements
 
 - [Vicon Tracker](https://www.vicon.com/software/tracker/) running on another machine, with DataStream enabled and reachable over the network (hostname/IP).
-- ROS 2 Jazzy Jalisco installed and sourced (at least *ros-jazzy-ros-base* and *ros-dev-tools* packages, [installation guide](https://docs.ros.org/en/jazzy/Installation.html))
-- *rosdep* initialized and updated for managing ROS 2 package dependencies ([installation guide](https://docs.ros.org/en/jazzy/Tutorials/Intermediate/Rosdep.html))
-- common build tools: cmake, gcc, build-essential, python3 (on Ubuntu 24.04, a Python 3 virtual environment is recommended)
-- git package for cloning the repository
-- For PX4 integration: [px4_msgs](https://github.com/PX4/px4_msgs) package cloned into your workspace
+- ROS 2 Jazzy Jalisco or Humble Hawksbill installed and sourced (at least *ros-jazzy-ros-base* and *ros-dev-tools* packages, [installation guide](https://docs.ros.org/en/jazzy/Installation.html))
+- *rosdep* initialized and updated for managing ROS 2 package dependencies ([installation guide](https://docs.ros.org/en/jazzy/Tutorials/Intermediate/Rosdep.html)) 
+- PX4_msgs package (forked minimal version available [here](https://github.com/evannsm/px4_msgs))
+- mocap_msgs package (available [here](https://github.com/evannsm/mocap_msgs))
 
 > Note: you do not need system-wide Boost or the Vicon DataStream SDK; both are vendored per-architecture inside this repository.
 
 ---
 
-## What's new in v1.0.0 (Jazzy)
+## What's new in this fork
 
-- **ROS 2 Jazzy** compatibility
-- **TF publishing:** TF information for tracked subjects is now available
-- **BREAKING:** switched output from a custom message to **`geometry_msgs/msg/PoseStamped`**
+- **ROS 2 Jazzy and Humble** compatibility
+- **NED frame:** Transforms Vicon data to North-East-Down (NED) frame convention used by PX4/Aerospace systems
+- **Quaternion and Euler Angle outputs:** Publishes vicon NED data in both quaternion and Euler angle formats for flexibility and ease of integration using custom mocap_msgs repository
+  - (x, y, z, qw, qx, qy, qz) via `geometry_msgs/msg/PoseStamped` on `<topic>` topics
+  - (x, y, z, roll, pitch, yaw) via `vicon_receiver/msg/PoseEuler` on `<topic>_euler` topics
 - **PX4 integration:** Publishes `px4_msgs/msg/VehicleOdometry` to `/fmu/in/vehicle_visual_odometry` for direct PX4 autopilot integration
-- **Euler angle output:** Publishes pose data with Euler angles (roll, pitch, yaw) via `vicon_receiver/msg/PoseEuler` on `<topic>_euler` topics
-
-### Migration notes
-
-- Update your subscribers to consume **`geometry_msgs/msg/PoseStamped`** instead of the legacy custom message.
 
 ---
 
 ## Compatibility
 
-- **ROS 2**: Jazzy
-- **OS / arch**: Ubuntu 24.04; `x86_64` and `ARM64` tested
+- **ROS 2**: Jazzy Jalisco and Humble Hawksbill
+- **OS / arch**: Ubuntu 24.04 and 22.04; `x86_64` and `ARM64` tested
 - **Vicon stack**: Vicon Tracker; Vicon DataStream SDK **1.12**
 - **SDK & Boost**: vendored per-arch inside this repo (no system install needed)
 
 ---
 
-## Package layout & executable
+## Package layout & Executable
 
 - Package name: **`vicon_receiver`**
 - Primary executable: **`vicon_client`** (C++)
 - Launch file: **`client.launch.py`**
-
+- Secondary executables:
+  - **'visual_odometry_relay.cpp'**: relays Vicon data to `/fmu/in/vehicle_visual_odometry` in px4_msgs/msg/VehicleOdometry message format PX4 EKF fusion for hardware experiments
+  - **'full_state_relay.cpp'**: subscibes to PX4 odometry and local position topics and combines position, velocity, acceleration, and so on into a single `px4_msgs/msg/VehicleFullState` message to be used for logging and a single subscription in PX4 control nodes.
 ---
 
 ## Quick start
 
-Assumes ROS 2 Jazzy is already installed and `rosdep` initialized.
+Assumes ROS 2 Jazzy/Humble is already installed and `rosdep` initialized.
 
 1. Source ROS 2:
 
@@ -97,15 +61,16 @@ Assumes ROS 2 Jazzy is already installed and `rosdep` initialized.
 2. Create (or choose) a workspace directory:
 
     ```bash
-    mkdir -p ~/vicon_receiver_ws/src
-    cd ~/vicon_receiver_ws/src
+    mkdir -p ~/ws_mocap_px4_msgs_drivers/src
+    cd ~/ws_mocap_px4_msgs_drivers/src
     ```
 
 3. Clone the packages into `src/`:
 
     ```bash
     git clone https://github.com/evannsm/ros2-vicon-receiver.git
-    git clone -b v1.14_minimal_msgs git@github.com:evannsm/px4_msgs.git
+    git clone -b v1.16_minimal_msgs git@github.com:evannsm/px4_msgs.git
+    git clone git@github.com:evannsm/mocap_msgs.git
     cd ..   # back to workspace root
     ```
 
@@ -136,10 +101,12 @@ Assumes ROS 2 Jazzy is already installed and `rosdep` initialized.
     source install/setup.bash
     ```
 
-7. Alter arguments in the `/launch/client.launch.py` file as needed (e.g., `hostname` to match your Vicon server), or override them on the command line.
+7. Alter arguments in the `/launch/client.launch.py` file as needed (e.g., `hostname` to match your Vicon server) and launch
+```bash
+    ros2 launch vicon_receiver client.launch.py
+```
 
-8. Launch the client (adjust parameters to your setup):
-
+8. Alternatively, you can pass parameters directly on the command line without modifying the launch file (see below for parameter details).
     ```bash
     ros2 launch vicon_receiver client.launch.py   \
       hostname:=192.168.10.1                      \
@@ -152,7 +119,7 @@ Assumes ROS 2 Jazzy is already installed and `rosdep` initialized.
       map_rpy_in_degrees:=false
     ```
 
-9. After the ros2-vicon-receiver node is running you can:
+9.  After the ros2-vicon-receiver node is running you can:
 
    - Visualize streamed pose data in RViz2: add a TF display and/or Pose displays for the published topics.
    - Inspect raw messages directly: `ros2 topic list`, then `ros2 topic echo /vicon/<subject_name>/<segment_name>` (adjust topic name as provided by the node).
