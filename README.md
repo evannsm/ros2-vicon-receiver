@@ -89,7 +89,7 @@ And to also include the full state relay:
 ros2 launch vicon_receiver full_state_relay.launch.py
 ```
 
-### Example Tppic Tree (all three nodes running) assuming your rigid body is named `drone` in the Vicon Tracker app.
+### Example Topic Tree (all three nodes running) assuming your rigid body is named `drone` in the Vicon Tracker app.
 
 ```text
 /vicon/
