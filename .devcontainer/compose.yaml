@@ -8,8 +8,8 @@ services:
         USER_UID: ${UID:-1000}
         USER_GID: ${GID:-1000}
         WS_NAME: ros2_ws
-    image: vsc_vicon_dev:1.0.0
-    container_name: devcontainer_vicon
+    image: vsc_vicon4px4_dev:1.0.0
+    container_name: devcontainer_vicon4px4
 
     # Interactive shell
     stdin_open: true 

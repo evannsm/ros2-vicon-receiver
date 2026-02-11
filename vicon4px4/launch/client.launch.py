@@ -70,7 +70,7 @@ def generate_launch_description():
         
         # Node
         Node(
-            package='vicon_receiver', 
+            package='vicon4px4', 
             executable='vicon_client', 
             output='screen',
             parameters=[{

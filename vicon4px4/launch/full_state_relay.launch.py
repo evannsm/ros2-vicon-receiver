@@ -6,7 +6,7 @@ def generate_launch_description():
     """Launch only the full_state_relay node."""
     
     full_state_relay = Node(
-        package='vicon_receiver',
+        package='vicon4px4',
         executable='full_state_relay',
         output='screen',
     )

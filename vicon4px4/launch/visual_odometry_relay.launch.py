@@ -6,7 +6,7 @@ def generate_launch_description():
     """Launch only the visual_odometry_relay node."""
     
     visual_odometry_relay = Node(
-        package='vicon_receiver',
+        package='vicon4px4',
         executable='visual_odometry_relay',
         output='screen',
     )

@@ -1,6 +1,7 @@
-# Vicon Receiver for ROS 2 with PX4 External Vision Fusion and Custom Full State Publishing
+# Vicon4PX4
+### A ROS 2 Vicon → PX4 External Vision Bridge
 
-A ROS 2 (C++) package that streams Vicon motion capture data into the PX4 EKF as an external vision source, enabling position and heading fusion for hardware flight experiments. The package converts Vicon ENU measurements to NED, and publishes pose data in quaternions as well as euler angles under the rigid body name as defined in Vicon Tracker.
+`vicon4px4` is a ROS 2 (C++) package that streams Vicon motion capture data into the PX4 EKF using External Vision fusion, enabling position and heading fusion for hardware flight experiments. The package converts Vicon ENU measurements to NED, and publishes pose data in quaternions as well as euler angles under the rigid body name as defined in Vicon Tracker.
 
 Another launch file then relays this information for use in PX4 External Vision EKF Fusion by publishing the data as `px4_msgs/msg/VehicleOdometry` messages on `/fmu/in/vehicle_visual_odometry`, and handles the quaternion reordering and timestamping that PX4 expects. A secondary full-state relay node is available to merge the fused EKF output back from `/fmu/out/vehicle_odometry`, and `/fmu/out/vehicle_local_position` into one topic that relays all pose data including available higher order derivatives from the EKF for convenient logging and control.
 
@@ -28,7 +29,7 @@ Assumes ROS 2 Jazzy/Humble is already installed and `rosdep` initialized.
 3. Clone the packages into `src/`:
 
     ```bash
-    git clone git@github.com:evannsm/ros2-vicon-receiver.git
+    git clone git@github.com:evannsm/vicon4px4.git
     git clone -b v1.16_minimal_msgs git@github.com:evannsm/px4_msgs.git
     git clone git@github.com:evannsm/mocap_msgs.git
     cd ..   # back to workspace root
@@ -57,7 +58,7 @@ Assumes ROS 2 Jazzy/Humble is already installed and `rosdep` initialized.
     ```
 
 ### Setting up Networking Parameters:
-1. Navigate to `vicon_receiver/launch/client.launch.py` and set the hostname default value to the static IP address of the desktop that runs the Vicon Tracker software on a local area network (LAN). For instance, the desktop running the vicon tracker could have an IP on the LAN of `192.168.10.2' as shown below:
+1. Navigate to `vicon4px4/launch/client.launch.py` and set the hostname default value to the static IP address of the desktop that runs the Vicon Tracker software on a local area network (LAN). For instance, the desktop running the vicon tracker could have an IP on the LAN of `192.168.10.2' as shown below:
 ```python
     hostname_arg = DeclareLaunchArgument(
         'hostname',
@@ -75,18 +76,18 @@ To run the Vicon client and visual odometry relay (the typical flight-test confi
 
 In one terminal:
 ```bash
-ros2 launch vicon_receiver client.launch.py
+ros2 launch vicon4px4 client.launch.py
 ```
 
 In another terminal:
 ```bash
-ros2 launch vicon_receiver visual_odometry_relay.launch.py
+ros2 launch vicon4px4 visual_odometry_relay.launch.py
 ```
 
 And to also include the full state relay:
 
 ```bash
-ros2 launch vicon_receiver full_state_relay.launch.py
+ros2 launch vicon4px4 full_state_relay.launch.py
 ```
 
 ### Example Topic Tree (all three nodes running) assuming your rigid body is named `drone` in the Vicon Tracker app.
@@ -251,7 +252,7 @@ A gating mechanism prevents publishing stale or low-rate data:
 ## Package layout
 
 ```text
-vicon_receiver/
+vicon4px4/
 ├── src/
 │   ├── communicator.cpp            # vicon_client - connects to Vicon, converts ENU->NED
 │   ├── publisher.cpp               # per-subject publisher creation
@@ -315,7 +316,7 @@ The static `map -> vicon` transform is defined by `map_xyz` and `map_rpy`. Dynam
 
 ### TF2 frame tree
 
-<img src="docs/images/tf_tree.png" alt="TF2 frame tree for vicon_receiver" width="720">
+<img src="docs/images/tf_tree.png" alt="TF2 frame tree for vicon4px4" width="720">
 
 Example TF tree showing the static `world_frame -> vicon_frame` transform and dynamic subject frames.
 

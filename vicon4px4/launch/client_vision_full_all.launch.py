@@ -82,7 +82,7 @@ def generate_launch_description():
 
     # Node 1: Vicon client with parameters
     vicon_client = Node(
-        package='vicon_receiver',
+        package='vicon4px4',
         executable='vicon_client',
         output='screen',
         parameters=[{
@@ -97,16 +97,23 @@ def generate_launch_description():
         }]
     )
 
-        
     # Node 2: Visual odometry relay
     visual_odometry_relay = Node(
-        package='vicon_receiver',
+        package='vicon4px4',
         executable='visual_odometry_relay',
         output='screen',
     )
 
+    # Node 3: Full state relay
+    full_state_relay = Node(
+        package='vicon4px4',
+        executable='full_state_relay',
+        output='screen',
+    )
+
     # Add nodes to LaunchDescription
-    ld.add_action(visual_odometry_relay)
     ld.add_action(vicon_client)
+    ld.add_action(visual_odometry_relay)
+    ld.add_action(full_state_relay)
 
     return ld

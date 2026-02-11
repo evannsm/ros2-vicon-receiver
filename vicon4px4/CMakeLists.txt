@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.8)
-project(vicon_receiver)
+project(vicon4px4)
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -32,7 +32,7 @@ endif()
 
 ###########################################################
 # --- Vicon DataStream SDK vendored inside this package ---
-#   src/vicon_receiver/third_party/vicon_sdk/{include,lib}
+#   src/vicon4px4/third_party/vicon_sdk/{include,lib}
 set(VICON_SDK_ROOT         "${CMAKE_CURRENT_SOURCE_DIR}/third_party/${SYSTEM_ARCH}/vicon_sdk")
 set(VICON_SDK_INCLUDE_DIR  "${VICON_SDK_ROOT}/include")
 set(VICON_SDK_LIB          "${VICON_SDK_ROOT}/lib/libViconDataStreamSDK_CPP.so")
@@ -98,14 +98,14 @@ set_property(TARGET Boost::thread APPEND PROPERTY
 
 ###########################################################
 # --- Utility library ---
-add_library(vicon_receiver_utils
+add_library(vicon4px4_utils
   src/utils.cpp
 )
-target_include_directories(vicon_receiver_utils PUBLIC
+target_include_directories(vicon4px4_utils PUBLIC
   $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
   $<INSTALL_INTERFACE:include>
 )
-target_link_libraries(vicon_receiver_utils PUBLIC
+target_link_libraries(vicon4px4_utils PUBLIC
   Eigen3::Eigen
 )
 
@@ -124,7 +124,7 @@ target_include_directories(vicon_client PRIVATE
 
 # Link dependencies
 target_link_libraries(vicon_client
-  vicon_receiver_utils
+  vicon4px4_utils
   ViconDataStreamSDK::ViconDataStreamSDK_CPP
   Boost::system Boost::thread Boost::chrono Boost::timer
 )
@@ -224,7 +224,7 @@ install(DIRECTORY include/
         DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
 
 # Install utility library
-install(TARGETS vicon_receiver_utils
+install(TARGETS vicon4px4_utils
   ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
   LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
 )

@@ -1,5 +1,5 @@
-#include "vicon_receiver/communicator.hpp"
-#include "vicon_receiver/utils.hpp"
+#include "vicon4px4/communicator.hpp"
+#include "vicon4px4/utils.hpp"
 
 using namespace ViconDataStreamSDK::CPP;
 
